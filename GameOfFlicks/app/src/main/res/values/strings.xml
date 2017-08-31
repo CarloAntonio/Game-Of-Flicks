@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Game Of Flicks</string>
+
+    <!--menu-->
+    <string name="action_most_popular">Popular Movies</string>
+    <string name="action_top_rated">Top Rated Movies</string>
+    <string name="movie_poster_container">Movie poster container</string>
+
+    <!--details activity-->
+    <string name="release_date"><u>Release Date</u></string>
+    <string name="rating"><u>Rating</u></string>
+    <string name="title"><u>Title</u></string>
+    <string name="no_internet_connectivity">No Internet Connection</string>
+    <string name="synopsis">Synopsis</string>
+</resources>
