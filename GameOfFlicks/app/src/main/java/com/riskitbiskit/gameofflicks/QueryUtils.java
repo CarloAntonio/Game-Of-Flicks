@@ -3,6 +3,9 @@ package com.riskitbiskit.gameofflicks;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.riskitbiskit.gameofflicks.DetailsActivity.Review;
+import com.riskitbiskit.gameofflicks.MainActivity.Movie;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +26,8 @@ public class QueryUtils {
 
     private QueryUtils() {}
 
-    public static List<Movie> fetchEarthquakeData(String requestUrl) {
+    //Fetch a list of movies
+    public static List<Movie> fetchMovies(String requestUrl) {
         //transform String form of Url to actual url
         URL url = createUrl(requestUrl);
 
@@ -35,6 +39,35 @@ public class QueryUtils {
         }
 
         return extractMovies(jsonResponse);
+    }
+
+    //Fetch a list of user reviews
+    public static List<Review> fetchReviewData (String requestUrl) {
+        //transform String form of Url to actual url
+        URL url = createUrl(requestUrl);
+
+        String jsonResponse = null;
+        try {
+            jsonResponse = makeHttpRequest(url);
+        } catch (IOException IOE) {
+            Log.e(LOG_TAG, "Error closing input stream", IOE);
+        }
+
+        return extractReviews(jsonResponse);
+    }
+
+    public static List<String> fetchVideoPath (String requestUrl) {
+        //transform String form of Url to actual url
+        URL url = createUrl(requestUrl);
+
+        String jsonResponse = null;
+        try {
+            jsonResponse = makeHttpRequest(url);
+        } catch (IOException IOE) {
+            Log.e(LOG_TAG, "Error closing input stream", IOE);
+        }
+
+        return extractVideoPath(jsonResponse);
     }
 
     private static URL createUrl(String stringUrl) {
@@ -122,14 +155,61 @@ public class QueryUtils {
                 double movieRating = currentMovieObject.getDouble("vote_average");
                 String moviePosterPath = currentMovieObject.getString("poster_path");
                 String movieReleaseDate = currentMovieObject.getString("release_date");
+                long movieId = currentMovieObject.getLong("id");
 
-                movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate));
+                movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate, movieId));
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
+        }
+        return movies;
+    }
 
+    private static List<Review> extractReviews(String jsonResponse) {
+        if (TextUtils.isEmpty(jsonResponse)) {
+            return null;
         }
 
-        return movies;
+        List<Review> reviews = new ArrayList<>();
+
+        try {
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
+
+                String author = currentMovieReview.getString("author");
+                String content = currentMovieReview.getString("content");
+
+                reviews.add(new Review(author, content));
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the movie reviews JSON results", e);
+        }
+
+        return reviews;
+    }
+
+    private static List<String> extractVideoPath(String jsonResponse) {
+        if (TextUtils.isEmpty(jsonResponse)) {
+            return null;
+        }
+
+        List<String> videoPaths = new ArrayList<>();;
+
+        try {
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
+
+                String currentMoviePath = currentMovieReview.getString("key");
+
+                videoPaths.add(currentMoviePath);
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the promo video JSON results", e);
+        }
+        return videoPaths;
     }
 }
