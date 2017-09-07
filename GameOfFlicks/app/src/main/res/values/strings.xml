@@ -12,10 +12,12 @@
     <string name="title"><u>Title</u></string>
     <string name="no_internet_connectivity">No Internet Connection</string>
     <string name="synopsis">Synopsis</string>
-    <string name="loading_error">Error Loading Data</string>
     <string name="error_loading_data">Error Loading Data</string>
     <string name="trailers">Trailers</string>
     <string name="reviews">Reviews</string>
     <string name="image_of_poster">Image of Poster</string>
     <string name="play_movie_trailer">Play Movie Trailer</string>
+    <string name="favorite_movies">Favorite Movies</string>
+    <string name="add_to_favorites">Favorite!</string>
+    <string name="the_movie_db_logo">The Movie DB Logo</string>
 </resources>

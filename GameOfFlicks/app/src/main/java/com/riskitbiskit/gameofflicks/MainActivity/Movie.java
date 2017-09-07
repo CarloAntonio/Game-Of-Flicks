@@ -1,6 +1,9 @@
 package com.riskitbiskit.gameofflicks.MainActivity;
 
-public class Movie {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Movie implements Parcelable{
     //public static variables
     public static final String MOVIE_NAME = "name";
     public static final String MOVIE_OVERVIEW = "overview";
@@ -26,6 +29,27 @@ public class Movie {
         this.movieId = movieId;
     }
 
+    protected Movie(Parcel in) {
+        originalTitle = in.readString();
+        overview = in.readString();
+        voteAverage = in.readDouble();
+        posterPath = in.readString();
+        releaseDate = in.readString();
+        movieId = in.readLong();
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
+
     public String getOriginalTitle() {
         return originalTitle;
     }
@@ -48,5 +72,20 @@ public class Movie {
 
     public long getMovieId() {
         return movieId;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(originalTitle);
+        parcel.writeString(overview);
+        parcel.writeDouble(voteAverage);
+        parcel.writeString(posterPath);
+        parcel.writeString(releaseDate);
+        parcel.writeLong(movieId);
     }
 }

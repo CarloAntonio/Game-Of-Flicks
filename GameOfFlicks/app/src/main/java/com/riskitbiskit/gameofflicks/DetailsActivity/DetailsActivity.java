@@ -1,17 +1,24 @@
 package com.riskitbiskit.gameofflicks.DetailsActivity;
 
 import android.app.LoaderManager;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.riskitbiskit.gameofflicks.Database.FavoritesContract.FavoritesEntry;
 import com.riskitbiskit.gameofflicks.MainActivity.MainActivity;
 import com.riskitbiskit.gameofflicks.MainActivity.Movie;
 import com.riskitbiskit.gameofflicks.R;
@@ -24,11 +31,24 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
     public static final int PROMO_LOADER = 0;
     public static final int REVIEW_LOADER = 1;
+    public static final int ADD_OR_DELETE_LOADER = 2;
+    public static final int BUTTON_LOADER = 3;
 
+
+    private int movieDatabaseId;
+    private String movieName;
+    private String movieOverview;
+    private double movieRating;
+    private String moviePosterPath;
+    private String movieReleaseDate;
     private long movieId;
+
     TableLayout trailerTableLayout;
     TableLayout reviewTableLayout;
+    Button favesButton;
     LoaderManager.LoaderCallbacks reviewLoaderCallback;
+    LoaderManager.LoaderCallbacks addOrDeleteCallback;
+    LoaderManager.LoaderCallbacks buttonCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,12 +66,12 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
             relativeLayout.setVisibility(View.INVISIBLE);
 
-            String movieName = intent.getStringExtra(Movie.MOVIE_NAME);
-            String movieOverview = intent.getStringExtra(Movie.MOVIE_OVERVIEW);
-            double movieRating = intent.getDoubleExtra(Movie.MOVIE_RATING, 0.0);
-            String stringRating = String.valueOf(movieRating);
-            String moviePosterPath = intent.getStringExtra(Movie.MOVIE_POSTER_PATH);
-            String movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
+            movieName = intent.getStringExtra(Movie.MOVIE_NAME);
+            movieOverview = intent.getStringExtra(Movie.MOVIE_OVERVIEW);
+            movieRating = intent.getDoubleExtra(Movie.MOVIE_RATING, 0.0);
+            final String stringRating = String.valueOf(movieRating);
+            moviePosterPath = intent.getStringExtra(Movie.MOVIE_POSTER_PATH);
+            movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
             movieId = intent.getLongExtra(Movie.MOVIE_ID, 0);
 
             //Find relevant views
@@ -72,6 +92,15 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             String fullUrl = baseUrl + moviePosterPath;
             Picasso.with(this).load(fullUrl).into(posterIV);
 
+            //Locate favorites button
+            favesButton = (Button) findViewById(R.id.add_to_faves_button);
+            favesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    getLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, addOrDeleteCallback);
+                }
+            });
+
         } else {
             relativeLayout.setVisibility(View.VISIBLE);
         }
@@ -79,6 +108,78 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         //Locate dynamic table
         trailerTableLayout = (TableLayout) findViewById(R.id.trailers_table_layout);
         reviewTableLayout = (TableLayout) findViewById(R.id.review_table_layout);
+
+        addOrDeleteCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader onCreateLoader(int i, Bundle bundle) {
+                String[] projection = {
+                        FavoritesEntry._ID,
+                        FavoritesEntry.COLUMN_MOVIE_API_ID
+                };
+
+                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                        FavoritesEntry.CONTENT_URI,
+                        projection,
+                        null,
+                        null,
+                        null);
+
+                return cursorLoader;
+            }
+
+            @Override
+            public void onLoadFinished(Loader loader, Cursor cursor) {
+                boolean isUnique = true;
+                int copyId = -1;
+
+                while (cursor.moveToNext()) {
+                    if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
+                        isUnique = false;
+                        copyId = cursor.getInt(cursor.getColumnIndex(FavoritesEntry._ID));
+                    }
+                }
+
+                if (isUnique) {
+                    ContentValues values = new ContentValues();
+                    values.put(FavoritesEntry.COLUMN_MOVIE_TITLE, movieName);
+                    values.put(FavoritesEntry.COLUMN_MOVIE_OVERVIEW, movieOverview);
+                    values.put(FavoritesEntry.COLUMN_MOVIE_RATING, movieRating);
+                    values.put(FavoritesEntry.COLUMN_MOVIE_POSTER, moviePosterPath);
+                    values.put(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE, movieReleaseDate);
+                    values.put(FavoritesEntry.COLUMN_MOVIE_API_ID, movieId);
+
+                    Uri addFaveUri = getContentResolver().insert(FavoritesEntry.CONTENT_URI, values);
+                    // Show a toast message depending on whether or not the insertion was successful
+                    if (addFaveUri == null) {
+                        // If the new content URI is null, then there was an error with insertion.
+                        Toast.makeText(getBaseContext(), "Error saving movie to favorites", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Otherwise, the insertion was successful and we can display a toast.
+                        Toast.makeText(getBaseContext(), "Movie added to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                    finish();
+                } else {
+                    Uri selectedFaveUri = ContentUris.withAppendedId(FavoritesEntry.CONTENT_URI, copyId);
+                    int rowsDeleted = getContentResolver().delete(
+                            selectedFaveUri,
+                            null,
+                            null
+                    );
+
+                    if (rowsDeleted > 0) {
+                        Toast.makeText(getBaseContext(), "Movie Deleted From Favorites", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getBaseContext(), "Error Deleting Movie From Favorites", Toast.LENGTH_SHORT).show();
+                    }
+                    finish();
+                }
+            }
+
+            @Override
+            public void onLoaderReset(Loader loader) {
+
+            }
+        };
 
         reviewLoaderCallback = new LoaderManager.LoaderCallbacks<List<Review>>() {
             @Override
@@ -118,6 +219,49 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             }
         };
 
+        buttonCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader onCreateLoader(int i, Bundle bundle) {
+                String[] projection = {
+                        FavoritesEntry._ID,
+                        FavoritesEntry.COLUMN_MOVIE_API_ID
+                };
+
+                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                        FavoritesEntry.CONTENT_URI,
+                        projection,
+                        null,
+                        null,
+                        null);
+
+                return cursorLoader;
+            }
+
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+
+                boolean isUnique = true;
+
+                while (cursor.moveToNext()) {
+                    if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
+                        isUnique = false;
+                    }
+                }
+
+                if (!isUnique) {
+                    Button favesButton = (Button) findViewById(R.id.add_to_faves_button);
+                    favesButton.setText("Unfavorite");
+                }
+            }
+
+
+            @Override
+            public void onLoaderReset(Loader loader) {
+
+            }
+        };
+
+        getLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
         getLoaderManager().initLoader(PROMO_LOADER, null, this);
         getLoaderManager().initLoader(REVIEW_LOADER, null, reviewLoaderCallback);
     }

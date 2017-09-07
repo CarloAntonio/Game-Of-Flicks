@@ -195,7 +195,7 @@ public class QueryUtils {
             return null;
         }
 
-        List<String> videoPaths = new ArrayList<>();;
+        List<String> videoPaths = new ArrayList<>();
 
         try {
             JSONObject rootObject = new JSONObject(jsonResponse);

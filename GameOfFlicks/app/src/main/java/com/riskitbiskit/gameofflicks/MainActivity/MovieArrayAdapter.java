@@ -47,7 +47,7 @@ public class MovieArrayAdapter extends ArrayAdapter<Movie> {
         String currentReleaseDate = currentMovie.getReleaseDate();
 
         //Attach poster to view
-        ImageView posterImageView = (ImageView) itemView.findViewById(R.id.poster_iv);
+        ImageView posterImageView = itemView.findViewById(R.id.poster_iv);
         String fullPosterPath = appendPosterPath(currentPosterPath);
         Picasso.with(getContext()).load(fullPosterPath).into(posterImageView);
 

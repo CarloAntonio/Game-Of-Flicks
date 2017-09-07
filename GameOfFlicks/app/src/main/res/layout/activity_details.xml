@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_content_sv"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@android:color/white">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -32,7 +33,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:layout_marginTop="16dp"
                 android:text="@string/title"/>
 
             <TextView
@@ -45,7 +45,7 @@
                 android:id="@+id/rating_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center"
                 android:text="@string/rating"/>
 
@@ -59,7 +59,7 @@
                 android:id="@+id/release_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center"
                 android:text="@string/release_date"/>
 
@@ -68,6 +68,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"/>
+
+            <Button
+                android:id="@+id/add_to_faves_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@color/colorAccent"
+                android:text="@string/add_to_favorites"/>
         </LinearLayout>
 
         <LinearLayout
@@ -132,6 +140,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingLeft="8dp"
+            android:paddingRight="8dp"
             android:showDividers="middle"
             android:divider="@color/colorPrimary"
             android:layout_below="@+id/trailers_header">
@@ -141,8 +150,9 @@
             android:id="@+id/reviews_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_below="@id/trailers_table_layout"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
             android:layout_marginBottom="-12dp"
             android:text="@string/reviews"/>
 

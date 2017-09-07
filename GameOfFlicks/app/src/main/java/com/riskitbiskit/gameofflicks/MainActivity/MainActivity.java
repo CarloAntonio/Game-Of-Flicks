@@ -1,10 +1,12 @@
 package com.riskitbiskit.gameofflicks.MainActivity;
 
 import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Loader;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -19,29 +21,37 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
 
-
 import com.riskitbiskit.gameofflicks.DetailsActivity.DetailsActivity;
 import com.riskitbiskit.gameofflicks.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Movie>>,
-        SharedPreferences.OnSharedPreferenceChangeListener{
+import static com.riskitbiskit.gameofflicks.Database.FavoritesContract.*;
+
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Movie>> {
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     //General global static constants
     public static final int MOVIE_LOADER = 0;
     private MovieArrayAdapter mMovieArrayAdapter;
+    private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallbacks;
+    private boolean isFavoritesList = false;
+    TextView noInternetTV;
+    ArrayList<Movie> cursorToList;
 
     //API global static constants
     public static final String API_KEY = "omitted";
     public static final String ROOT_URL = "https://api.themoviedb.org/3";
     public static final String PATH = "path";
-    public static final String NOW_PLAYING_PATH = "/movie/now_playing";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
+    public static final String ON_SAVE_INSTANCE_STATE_KEY = "key";
+    public static final String FAVE_LIST_BOOLEAN = "faveBoolean";
+
+    //Possible future API path
+    //public static final String NOW_PLAYING_PATH = "/movie/now_playing";
 
 
     @Override
@@ -53,9 +63,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         GridView moviesGridView = (GridView) findViewById(R.id.content_grid_view);
+        noInternetTV = (TextView) findViewById(R.id.no_internet_view);
+        cursorToList = new ArrayList<>();
 
         //Setup adapter
         mMovieArrayAdapter = new MovieArrayAdapter(this, R.layout.movie_poster_item, new ArrayList<Movie>());
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_KEY)
+                && savedInstanceState.containsKey(FAVE_LIST_BOOLEAN)) {
+            isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
+            cursorToList = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
+            mMovieArrayAdapter.addAll(cursorToList);
+        }
+
         moviesGridView.setAdapter(mMovieArrayAdapter);
 
         moviesGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -86,17 +106,65 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-            getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        mLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+                String[] projection = {
+                        FavoritesEntry._ID,
+                        FavoritesEntry.COLUMN_MOVIE_TITLE,
+                        FavoritesEntry.COLUMN_MOVIE_OVERVIEW,
+                        FavoritesEntry.COLUMN_MOVIE_RATING,
+                        FavoritesEntry.COLUMN_MOVIE_POSTER,
+                        FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE,
+                        FavoritesEntry.COLUMN_MOVIE_API_ID
+                };
+
+                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                        FavoritesEntry.CONTENT_URI,
+                        projection,
+                        null,
+                        null,
+                        null);
+
+                return cursorLoader;
+            }
+
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+
+                cursorToList.clear();
+
+                while (cursor.moveToNext()) {
+                    String cursorTitle = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_TITLE));
+                    String cursorOverview = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_OVERVIEW));
+                    double cursorRating = cursor.getDouble(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RATING));
+                    String cursorPoster = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_POSTER));
+                    String cursorReleaseDate = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE));
+                    long cursorId = cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID));
+                    cursorToList.add(new Movie(cursorTitle, cursorOverview, cursorRating, cursorPoster, cursorReleaseDate, cursorId));
+                }
+
+                mMovieArrayAdapter.clear();
+
+                mMovieArrayAdapter.addAll(cursorToList);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<Cursor> loader) {
+                mMovieArrayAdapter.clear();
+            }
+        };
+
+        if (isFavoritesList) {
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+            noInternetTV.setText("");
         } else {
-            TextView textView = (TextView) findViewById(R.id.no_internet_view);
-            textView.setText(R.string.no_internet_connectivity);
+            if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
+                getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+            } else {
+                noInternetTV.setText(R.string.no_internet_connectivity);
+            }
         }
-    }
-
-    public String getRequestUrl(String desiredPath) {
-
-        return "";
     }
 
     @Override
@@ -119,13 +187,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString(PATH, MOST_POPULAR_PATH);
             editor.apply();
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+            isFavoritesList = false;
             return true;
         } else if (id == R.id.action_top_rated) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString(PATH, TOP_RATED_PATH);
             editor.apply();
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+            isFavoritesList = false;
             return true;
+        } else if (id == R.id.action_favorites) {
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+            isFavoritesList = true;
+            noInternetTV.setText("");
         }
         return super.onOptionsItemSelected(item);
     }
@@ -134,11 +210,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
 
-        String queryPath = NOW_PLAYING_PATH;
+        String queryPath = MOST_POPULAR_PATH;
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (sharedPreferences.contains(PATH)) {
-            queryPath = sharedPreferences.getString(PATH, NOW_PLAYING_PATH);
+            queryPath = sharedPreferences.getString(PATH, MOST_POPULAR_PATH);
         }
 
         Uri baseUri = Uri.parse(ROOT_URL + queryPath);
@@ -173,19 +249,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+
+        outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, cursorToList);
+        outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
-    }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+        if (isFavoritesList) {
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+        }
     }
 }
