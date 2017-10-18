@@ -23,4 +23,4 @@ This application uses [The Movie Database, TMDb](https://www.themoviedb.org/) AP
 ### Libraries Used
 * Picasso
 * Android Support
- * AppCompat, Constraint, Design
+	* AppCompat, Constraint, Design
