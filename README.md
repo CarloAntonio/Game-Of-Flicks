@@ -1,6 +1,6 @@
 # Game Of Flicks
 
-## Udacity Android Nanodegree Project 1 & 2: Build it Bigger (Popular Movies)
+## Udacity Android Nanodegree Project 1 & 2: Popular Movies
 This is a fully functional and colorful android application that I made for Udacity's Android Developer Nanodegree Program. The app displays a grid of posters based on the user's search preferences. The application supports searchs based on popularity and rating. The user can also display a list of previously saved movie titles. Details of the movies can be explored by clicking on the poster thumbnail.
 
 ### Features:
