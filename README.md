@@ -13,9 +13,9 @@ This app can:
 ### How to work with the source code:
 This application uses [The Movie Database, TMDb](https://www.themoviedb.org/) API to serve the movie data. You must provide your own API key in order to build the app. After obtaining an API key, add to the "API_KEY" constant in the MainActivity.java file. 
 
-### Screens
+### User Facing Screens
 <img src="https://user-images.githubusercontent.com/25759516/31740004-bd265f2a-b404-11e7-810e-65d52b90bbb2.png" width="400">
 
 <img src="https://user-images.githubusercontent.com/25759516/31740013-c9265230-b404-11e7-9dd5-56b23e137367.png" width="400">
 
-<img src="https://user-images.githubusercontent.com/25759516/31740015-ca8b3fb4-b404-11e7-8462-1a7786a3801a.png" width="400">
+<img src="https://user-images.githubusercontent.com/25759516/31740015-ca8b3fb4-b404-11e7-8462-1a7786a3801a.png" width="800">
