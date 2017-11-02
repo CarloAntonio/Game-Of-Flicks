@@ -29,7 +29,7 @@ public class MovieArrayAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
 
-        //check to see if there is a view available, if yes reuse it, if not inflate a new one
+        //Check to see if there is a view available, if yes reuse it, if not inflate a new one
         View itemView = convertView;
         if (itemView == null) {
             itemView = LayoutInflater.from(getContext()).inflate(R.layout.movie_poster_item, parent, false);
@@ -37,8 +37,6 @@ public class MovieArrayAdapter extends ArrayAdapter<Movie> {
 
         //Get movie from passed in list
         Movie currentMovie = getItem(position);
-
-
 
         String currentTitle = currentMovie.getOriginalTitle();
         String currentOverview = currentMovie.getOverview();

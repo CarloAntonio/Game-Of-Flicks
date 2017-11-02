@@ -26,15 +26,19 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<String>>,
         View.OnClickListener{
 
+    //Constants
     public static final int PROMO_LOADER = 0;
     public static final int REVIEW_LOADER = 1;
     public static final int ADD_OR_DELETE_LOADER = 2;
     public static final int BUTTON_LOADER = 3;
 
-
+    //Variables
     private int movieDatabaseId;
     private String movieName;
     private String movieOverview;
@@ -43,9 +47,18 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private String movieReleaseDate;
     private long movieId;
 
-    TableLayout trailerTableLayout;
-    TableLayout reviewTableLayout;
-    Button favesButton;
+    //Fields
+    @BindView(R.id.loading_error) RelativeLayout relativeLayout;
+    @BindView(R.id.title_tv) TextView titleTV;
+    @BindView(R.id.overview_tv) TextView overviewTV;
+    @BindView(R.id.rating_tv) TextView ratingTV;
+    @BindView(R.id.poster_iv) ImageView posterIV;
+    @BindView(R.id.release_tv) TextView releaseTV;
+    @BindView(R.id.trailers_table_layout) TableLayout trailerTableLayout;
+    @BindView(R.id.review_table_layout) TableLayout reviewTableLayout;
+    @BindView(R.id.add_to_faves_button) Button favesButton;
+
+    //Loaders
     LoaderManager.LoaderCallbacks reviewLoaderCallback;
     LoaderManager.LoaderCallbacks addOrDeleteCallback;
     LoaderManager.LoaderCallbacks buttonCallback;
@@ -55,7 +68,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
 
-        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.loading_error);
+        //Bind views
+        ButterKnife.bind(this);
 
         //Get intent details
         Intent intent = getIntent();
@@ -74,13 +88,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
             movieId = intent.getLongExtra(Movie.MOVIE_ID, 0);
 
-            //Find relevant views
-            TextView titleTV = (TextView) findViewById(R.id.title_tv);
-            TextView overviewTV = (TextView) findViewById(R.id.overview_tv);
-            TextView ratingTV = (TextView) findViewById(R.id.rating_tv);
-            ImageView posterIV = (ImageView) findViewById(R.id.poster_iv);
-            TextView releaseTV = (TextView) findViewById(R.id.release_tv);
-
             //Set Views
             titleTV.setText(movieName);
             overviewTV.setText(movieOverview);
@@ -93,7 +100,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             Picasso.with(this).load(fullUrl).into(posterIV);
 
             //Locate favorites button
-            favesButton = (Button) findViewById(R.id.add_to_faves_button);
             favesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -104,10 +110,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         } else {
             relativeLayout.setVisibility(View.VISIBLE);
         }
-
-        //Locate dynamic table
-        trailerTableLayout = (TableLayout) findViewById(R.id.trailers_table_layout);
-        reviewTableLayout = (TableLayout) findViewById(R.id.review_table_layout);
 
         addOrDeleteCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override

@@ -27,28 +27,38 @@ import com.riskitbiskit.gameofflicks.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 import static com.riskitbiskit.gameofflicks.Database.FavoritesContract.*;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Movie>> {
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    //General global static constants
-    public static final int MOVIE_LOADER = 0;
-    private MovieArrayAdapter mMovieArrayAdapter;
-    private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallbacks;
-    private boolean isFavoritesList = false;
-    TextView noInternetTV;
-    ArrayList<Movie> cursorToList;
-
-    //API global static constants
-    public static final String API_KEY = "omitted";
+    //Constants
+    public static final String API_KEY = "9248410cd68fafd7d26df8b01e1057b0";
     public static final String ROOT_URL = "https://api.themoviedb.org/3";
     public static final String PATH = "path";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
     public static final String ON_SAVE_INSTANCE_STATE_KEY = "key";
     public static final String FAVE_LIST_BOOLEAN = "faveBoolean";
+    public static final int MOVIE_LOADER = 0;
+
+    //General global static constants
+    @BindView(R.id.no_internet_view)
+    TextView noInternetTV;
+    @BindView(R.id.content_grid_view)
+    GridView moviesGridView;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
+    private MovieArrayAdapter mMovieArrayAdapter;
+    private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallbacks;
+    private boolean isFavoritesList = false;
+    ArrayList<Movie> cursorToList;
+
 
     //Possible future API path
     //public static final String NOW_PLAYING_PATH = "/movie/now_playing";
@@ -59,11 +69,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Initialize variables
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //Bind views
+        ButterKnife.bind(this);
+
+        //Setup custom toolbar
         setSupportActionBar(toolbar);
-        GridView moviesGridView = (GridView) findViewById(R.id.content_grid_view);
-        noInternetTV = (TextView) findViewById(R.id.no_internet_view);
+
+        //Initialize new Array List
         cursorToList = new ArrayList<>();
 
         //Setup adapter
