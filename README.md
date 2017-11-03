@@ -25,5 +25,6 @@ Details Screen </br>
 
 ### Libraries Used
 * Picasso
+* Glide
 * Android Support
 	* AppCompat, Constraint, Design
